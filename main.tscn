@@ -1,0 +1,110 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://demo_scene.tscn" type="PackedScene" id=1]
+[ext_resource path="res://patterns/dither map 8x8.png" type="Texture" id=2]
+[ext_resource path="res://main.gd" type="Script" id=3]
+[ext_resource path="res://talkatype_vari.fnt" type="BitmapFont" id=4]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+render_mode unshaded;
+
+uniform sampler2D dither_pattern;
+uniform bool enabled = true;
+uniform bool greyscale = false;
+uniform float dither_amount = 1.0;
+uniform int colours = 4;
+
+float dither(float raw, float dither, int depth) {
+	
+	float div = 1.0 / float(depth);
+	float val = 0.0;
+	
+	for (int i = 0; i < depth; i++) {
+		if (raw <= div * (float(i + 1))) {
+			if ((raw * float(depth)) - float(i) <= dither * 0.999) 	{val = div * float(i);}
+			else													{val = div * float(i + 1);}
+			break;
+		}
+	}
+
+	return val;
+}
+
+void fragment() {
+	vec4 raw = texture(TEXTURE, SCREEN_UV);
+	vec3 dither_pixel = texture(dither_pattern, SCREEN_UV).rgb;
+	if (enabled == true) {
+		
+		if (greyscale == true) {
+			raw.rgb = vec3((raw.r + raw.g + raw.b) / 3.0);
+		}
+		
+		COLOR.r = dither(raw.r, (dither_pixel.x - 0.5) * dither_amount + 0.5, colours - 1);
+		COLOR.g  = dither(raw.g, (dither_pixel.x - 0.5) * dither_amount + 0.5, colours - 1);
+		COLOR.b = dither(raw.b, (dither_pixel.x - 0.5) * dither_amount + 0.5, colours - 1);
+		
+	} else {
+		COLOR.rgb = raw.rgb;
+	}
+	
+
+}
+"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = SubResource( 1 )
+shader_param/enabled = true
+shader_param/greyscale = false
+shader_param/dither_amount = 0.9
+shader_param/colours = 4
+shader_param/dither_pattern = ExtResource( 2 )
+
+[node name="Viewport" type="Node2D"]
+script = ExtResource( 3 )
+
+[node name="ViewportContainer" type="ViewportContainer" parent="."]
+material = SubResource( 2 )
+margin_right = 40.0
+margin_bottom = 40.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Viewport" type="Viewport" parent="ViewportContainer"]
+size = Vector2( 640, 480 )
+handle_input_locally = false
+render_target_update_mode = 3
+shadow_atlas_size = 8192
+
+[node name="Spatial" parent="ViewportContainer/Viewport" instance=ExtResource( 1 )]
+
+[node name="help" type="Node2D" parent="."]
+position = Vector2( 10, 10 )
+
+[node name="ColorRect" type="ColorRect" parent="help"]
+margin_right = 184.0
+margin_bottom = 134.0
+color = Color( 0, 0, 0, 0.478431 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="help"]
+margin_left = 4.71939
+margin_top = 4.71938
+margin_right = 205.719
+margin_bottom = 103.719
+custom_fonts/font = ExtResource( 4 )
+text = "Controls:
+
+Mouse/WASD = look/move around
+E = toggle shader
+Space = start/stop light rotation
+F11 = toggle fullscreen
+F = toggle test images
+H = toggle this help menu
+Esc = release mouse"
+__meta__ = {
+"_edit_use_anchors_": false
+}

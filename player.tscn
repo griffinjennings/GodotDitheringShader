@@ -1,0 +1,135 @@
+[gd_scene load_steps=11 format=2]
+
+[ext_resource path="res://player.gd" type="Script" id=1]
+
+[sub_resource type="Animation" id=1]
+resource_name = "walk"
+length = 1.2
+loop = true
+tracks/0/type = "bezier"
+tracks/0/path = NodePath("../..:cam_stretch:x")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"points": PoolRealArray( 0.2, -0.25, 0, 0.25, 0, -0.2, -0.25, 0, 0.25, 0, 0.2, -0.25, 0, 0.25, 0 ),
+"times": PoolRealArray( 0, 0.6, 1.2 )
+}
+tracks/1/type = "bezier"
+tracks/1/path = NodePath("../..:cam_stretch:y")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"points": PoolRealArray( 0, -0.25, 0, 0.0957677, -0.139768, -0.131032, -0.0998429, 0.131032, 0.195611, 0.148503, 0, -0.202195, -0.131032, 0.199215, 0.122297, 0.1, -0.200471, -0.117471, 0.198901, -0.204826, -0.1, -0.200785, 0.222297, 0.196549, 0.1, 0, -0.199062, -0.087355, 0.198272, 0.0960905, 0.1, -0.205489, -0.0912645, 0.0879272, -0.0563225, 0.0262065, -0.0957677, 0.087355, 0.25, 0 ),
+"times": PoolRealArray( 0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.2 )
+}
+
+[sub_resource type="Shader" id=2]
+code = "shader_type spatial;
+render_mode cull_disabled, unshaded;
+
+
+void vertex() {
+
+	 POSITION = vec4(VERTEX, 1.0);
+}
+
+void fragment() {
+	
+	vec3 raw = texture(SCREEN_TEXTURE, SCREEN_UV).rgb; 
+	
+	
+	ALBEDO = raw;
+	ALBEDO.r = texture(SCREEN_TEXTURE, SCREEN_UV + vec2(0.004, 0.0)).r;
+	ALBEDO.b = texture(SCREEN_TEXTURE, SCREEN_UV - vec2(0.004, 0.0)).b;
+//	if (SCREEN_UV.x < 0.5) {
+//		ALBEDO = raw
+//	}
+}
+"
+
+[sub_resource type="ShaderMaterial" id=3]
+shader = SubResource( 2 )
+
+[sub_resource type="QuadMesh" id=4]
+material = SubResource( 3 )
+size = Vector2( 2, 2 )
+
+[sub_resource type="Shader" id=5]
+code = "shader_type spatial;
+render_mode blend_add, cull_disabled, unshaded;
+
+uniform float emboss_distance;
+void vertex() {
+
+	 POSITION = vec4(VERTEX, 1.0);
+}
+
+void fragment() {
+	
+	vec2 offset = SCREEN_UV;
+	
+
+	offset.x -= emboss_distance;
+	offset.y -= emboss_distance;
+
+    ALBEDO = texture(SCREEN_TEXTURE, offset).rgb; // use red for material albedo
+}
+"
+
+[sub_resource type="ShaderMaterial" id=6]
+shader = SubResource( 5 )
+shader_param/emboss_distance = 0.01
+
+[sub_resource type="QuadMesh" id=7]
+material = SubResource( 6 )
+size = Vector2( 2, 2 )
+
+[sub_resource type="CapsuleShape" id=8]
+height = 1.84425
+
+[sub_resource type="BoxShape" id=9]
+extents = Vector3( 1, 1, 0.2 )
+
+[node name="player" type="KinematicBody"]
+script = ExtResource( 1 )
+cam_stretch = Vector3( 0.2, 0, 0 )
+
+[node name="rot_assist" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0 )
+
+[node name="camera" type="Camera" parent="rot_assist"]
+cull_mask = 524287
+current = true
+far = 40.0
+
+[node name="headbob" type="AnimationPlayer" parent="rot_assist/camera"]
+autoplay = "walk"
+anims/walk = SubResource( 1 )
+
+[node name="overlay_mult" type="MeshInstance" parent="rot_assist/camera"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5 )
+visible = false
+mesh = SubResource( 4 )
+material/0 = null
+
+[node name="overlay_div" type="MeshInstance" parent="rot_assist/camera"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5 )
+visible = false
+mesh = SubResource( 7 )
+material/0 = null
+
+[node name="body_bottom" type="CollisionShape" parent="."]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 2, 0 )
+shape = SubResource( 8 )
+
+[node name="body_top" type="CollisionShape" parent="."]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 4, 0 )
+shape = SubResource( 8 )
+
+[node name="CollisionShape2" type="CollisionShape" parent="."]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0.2, 0 )
+shape = SubResource( 9 )
