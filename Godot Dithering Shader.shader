@@ -14,8 +14,11 @@ float dither(float raw, float dither, int depth) {
 	
 	for (int i = 0; i < depth; i++) {
 		if (raw <= div * (float(i + 1))) {
-			if ((raw * float(depth)) - float(i) <= dither * 0.999) 	{val = div * float(i);}
-			else													{val = div * float(i + 1);}
+			if ((raw * float(depth)) - float(i) <= dither * 0.999) {
+				val = div * float(i);
+			} else {
+				val = div * float(i + 1);
+			}
 			break;
 		}
 	}
