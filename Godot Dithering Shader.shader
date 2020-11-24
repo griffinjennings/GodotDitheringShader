@@ -27,8 +27,8 @@ float dither(float raw, float dither, int depth) {
 }
 
 void fragment() {
-	vec4 raw = texture(TEXTURE, SCREEN_UV);
-	vec3 dither_pixel = texture(dither_pattern, SCREEN_UV).rgb;
+	vec4 raw = texture(TEXTURE, UV);
+	vec3 dither_pixel = texture(dither_pattern, UV).rgb;
 	if (enabled == true) {
 		
 		if (greyscale == true) {
@@ -42,6 +42,6 @@ void fragment() {
 	} else {
 		COLOR.rgb = raw.rgb;
 	}
-	
+	COLOR.a = raw.a;
 
 }
