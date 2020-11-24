@@ -22,7 +22,9 @@ float dither(float raw, float dither, int depth) {
 			break;
 		}
 	}
-
+	if (raw >= 1.0) {
+		val = 1.0;
+	}
 	return val;
 }
 
